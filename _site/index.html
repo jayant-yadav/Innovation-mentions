@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <!-- Preload is necessary because we show these images when we disconnect from the server,
+    but at that point we cannot load these images from the server -->
+    <link rel="preload" href="./assets/gradient-yHQUC_QB.png" as="image" />
+    <link rel="preload" href="./assets/noise-60BoTA8O.png" as="image" />
+    <!-- Preload the fonts -->
+    <link rel="preload" href="./assets/Lora-VariableFont_wght-B2ootaw-.ttf" as="font" crossorigin="anonymous" />
+    <link rel="preload" href="./assets/PTSans-Regular-CxL0S8W7.ttf" as="font" crossorigin="anonymous" />
+    <link rel="preload" href="./assets/PTSans-Bold-D9fedIX3.ttf" as="font" crossorigin="anonymous" />
+    <link rel="preload" href="./assets/FiraMono-Regular-BTCkDNvf.ttf" as="font" crossorigin="anonymous" />
+    <link rel="preload" href="./assets/FiraMono-Medium-DU3aDxX5.ttf" as="font" crossorigin="anonymous" />
+    <link rel="preload" href="./assets/FiraMono-Bold-CLVRCuM9.ttf" as="font" crossorigin="anonymous" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="a marimo app" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <script data-marimo="true">
+      function __resizeIframe(obj) {
+        var scrollbarHeight = 20; // Max between windows, mac, and linux
+
+        function setHeight() {
+          var element = obj.contentWindow.document.documentElement;
+          // If there is no vertical scrollbar, we don't need to resize the iframe
+          if (element.scrollHeight === element.clientHeight) {
+            return;
+          }
+
+          // Create a new height that includes the scrollbar height if it's visible
+          var hasHorizontalScrollbar = element.scrollWidth > element.clientWidth;
+          var newHeight = element.scrollHeight + (hasHorizontalScrollbar ? scrollbarHeight : 0);
+
+          // Only update the height if it's different from the current height
+          if (obj.style.height !== `${newHeight}px`) {
+            obj.style.height = `${newHeight}px`;
+          }
+        }
+
+        // Resize the iframe to the height of the content and bottom scrollbar height
+        setHeight();
+
+        // Resize the iframe when the content changes
+        const resizeObserver = new ResizeObserver((entries) => {
+          setHeight();
+        });
+        resizeObserver.observe(obj.contentWindow.document.body);
+      }
+    </script>
+    <marimo-filename hidden>notebook.py</marimo-filename>
+    <marimo-mode data-mode='read' hidden></marimo-mode>
+    <marimo-version data-version='0.11.28' hidden></marimo-version>
+    <marimo-user-config data-config='{"completion": {"activate_on_typing": true, "copilot": false}, "display": {"theme": "light", "code_editor_font_size": 14, "cell_output": "above", "default_width": "medium", "dataframes": "rich"}, "formatting": {"line_length": 79}, "keymap": {"preset": "default", "overrides": {}}, "runtime": {"auto_instantiate": true, "auto_reload": "off", "on_cell_change": "autorun", "watcher_on_save": "lazy", "output_max_bytes": 8000000, "std_stream_max_bytes": 1000000, "pythonpath": []}, "save": {"autosave": "off", "autosave_delay": 1000, "format_on_save": false}, "package_management": {"manager": "pip"}, "server": {"browser": "default", "follow_symlink": false}, "language_servers": {"pylsp": {"enabled": true, "enable_mypy": true, "enable_ruff": true, "enable_flake8": false, "enable_pydocstyle": false, "enable_pylint": false, "enable_pyflakes": false}}, "snippets": {"custom_paths": [], "include_default_snippets": true}}' data-overrides='{}' hidden></marimo-user-config>
+    <marimo-app-config data-config='{"width": "medium"}' hidden></marimo-app-config>
+    <marimo-server-token data-token='123' hidden></marimo-server-token>
+    <title>read mentions</title>
+    <script type="module" crossorigin src="./assets/index-C0YQDsgj.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D1F2QcdO.css">
+  <marimo-wasm hidden=""></marimo-wasm>
+    <script>
+        if (window.location.protocol === 'file:') {
+            alert('Warning: This file must be served by an HTTP server to function correctly.');
+        }
+    </script>
+    
+    <style>
+        #save-button {
+            display: none !important;
+        }
+        #filename-input {
+            display: none !important;
+        }
+    </style>
+    <marimo-code hidden="" data-show-code="false">import%20marimo%0A%0A__generated_with%20%3D%20%220.11.28%22%0Aapp%20%3D%20marimo.App(width%3D%22medium%22)%0A%0A%0A%40app.cell%0Adef%20_()%3A%0A%20%20%20%20import%20marimo%20as%20mo%0A%20%20%20%20return%20(mo%2C)%0A%0A%0A%40app.cell%0Adef%20_(mo)%3A%0A%20%20%20%20import%20polars%20as%20pl%0A%20%20%20%20path_to_public%20%3D%20mo.notebook_location()%20%2F%20%22public%22%0A%20%20%20%20csv_files%20%3D%20path_to_public.glob(%22*.csv%22)%0A%20%20%20%20dataframes%20%3D%20%7B%7D%0A%0A%20%20%20%20for%20csv_file%20in%20csv_files%3A%0A%20%20%20%20%20%20%20%20df%20%3D%20pl.read_csv(str(csv_file))%0A%20%20%20%20%20%20%20%20%23%20Extract%20the%20year%20from%20the%20file%20name%0A%20%20%20%20%20%20%20%20year%20%3D%20csv_file.name.split()%5B-1%5D.split(%22.%22)%5B0%5D%0A%20%20%20%20%20%20%20%20%23%20Add%20the%20year%20as%20a%20new%20column%0A%20%20%20%20%20%20%20%20df%20%3D%20df.with_columns(pl.lit(year).alias(%22year%22))%0A%20%20%20%20%20%20%20%20%23%20Filter%20the%20dataframe%0A%20%20%20%20%20%20%20%20filtered_df%20%3D%20df.filter(df%5B%22NarrativeText%22%5D.str.contains(%22innovation%7CInnovation%22))%0A%20%20%20%20%20%20%20%20dataframes%5Bcsv_file.name%5D%20%3D%20filtered_df%0A%20%20%20%20%20%20%20%20print(filtered_df)%0A%20%20%20%20return%20(%0A%20%20%20%20%20%20%20%20csv_file%2C%0A%20%20%20%20%20%20%20%20csv_files%2C%0A%20%20%20%20%20%20%20%20dataframes%2C%0A%20%20%20%20%20%20%20%20df%2C%0A%20%20%20%20%20%20%20%20filtered_df%2C%0A%20%20%20%20%20%20%20%20path_to_public%2C%0A%20%20%20%20%20%20%20%20pl%2C%0A%20%20%20%20%20%20%20%20year%2C%0A%20%20%20%20)%0A%0A%0A%40app.cell%0Adef%20_(dataframes)%3A%0A%20%20%20%20import%20matplotlib.pyplot%20as%20plt%0A%20%20%20%20country_counts%20%3D%20%7B%7D%0A%20%20%20%20for%20file_name%2C%20df_%20in%20dataframes.items()%3A%0A%20%20%20%20%20%20%20%20if%20%22BUSINESS_AREA_NAME%22%20in%20df_.columns%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20country_counts%5Bfile_name%5D%20%3D%20df_%5B%22BUSINESS_AREA_NAME%22%5D.n_unique()%0A%0A%20%20%20%20%23%20Plotting%20the%20bar%20graph%0A%20%20%20%20plt.figure(figsize%3D(10%2C%206))%0A%20%20%20%20bars%20%3D%20plt.bar(country_counts.keys()%2C%20country_counts.values()%2C%20color%3D'skyblue')%0A%20%20%20%20plt.xlabel('CSV%20Files')%0A%20%20%20%20plt.ylabel('Distinct%20Count%20of%20Countries')%0A%20%20%20%20plt.title('Distinct%20Count%20of%20Countries%20per%20CSV%20File')%0A%20%20%20%20plt.xticks(rotation%3D45%2C%20ha%3D'right')%0A%20%20%20%20plt.tight_layout()%0A%0A%20%20%20%20%23%20Adding%20labels%20on%20top%20of%20bars%0A%20%20%20%20for%20bar%20in%20bars%3A%0A%20%20%20%20%20%20%20%20plt.text(bar.get_x()%20%2B%20bar.get_width()%20%2F%202%2C%20bar.get_height()%2C%20str(bar.get_height())%2C%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ha%3D'center'%2C%20va%3D'bottom'%2C%20fontsize%3D10)%0A%0A%20%20%20%20plt.show()%0A%20%20%20%20return%20bar%2C%20bars%2C%20country_counts%2C%20df_%2C%20file_name%2C%20plt%0A%0A%0Aif%20__name__%20%3D%3D%20%22__main__%22%3A%0A%20%20%20%20app.run()%0A</marimo-code></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
