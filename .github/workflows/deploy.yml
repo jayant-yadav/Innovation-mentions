@@ -16,15 +16,11 @@ jobs:
             - name: 📦 Install dependencies
               run: |
                 uv venv .venv
-                echo "source .venv/bin/activate" >> $GITHUB_ENV
-                source .venv/bin/activate
-                uv pip install marimo matplotlib polars
+                .venv/bin/python -m pip install marimo matplotlib polars
 
             - name: 📄 Export notebook
               run: |
-                source .venv/bin/activate
-                which marimo  # Debugging step to check if marimo is installed
-                marimo export html-wasm read_mentions.py -o ./_site --mode run
+                .venv/bin/marimo export html-wasm read_mentions.py -o ./_site --mode run
 
             - name: 📦 Upload Pages Artifact
               uses: actions/upload-pages-artifact@v3
