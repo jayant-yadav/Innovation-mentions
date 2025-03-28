@@ -1,7 +1,7 @@
+on: push
 jobs:
     build:
         runs-on: ubuntu-latest
-
         steps:
             # ... checkout and install dependencies
             - uses: actions/checkout@v4
@@ -18,6 +18,7 @@ jobs:
               run: |
                 uv pip install marimo
                 uv pip install matplotlib
+                uv pip install polars
 
             - name: 📄 Export notebook
               run: |
