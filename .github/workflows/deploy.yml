@@ -16,9 +16,9 @@ jobs:
 
             - name: 📦 Install dependencies
               run: |
-                uv pip install marimo
-                uv pip install matplotlib
-                uv pip install polars
+                uv venv .venv
+                source .venv/bin/activate
+                uv pip install marimo matplotlib polars
 
             - name: 📄 Export notebook
               run: |
