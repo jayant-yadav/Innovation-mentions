@@ -3,7 +3,6 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            # ... checkout and install dependencies
             - uses: actions/checkout@v4
 
             - name: 🚀 Install uv
@@ -17,12 +16,15 @@ jobs:
             - name: 📦 Install dependencies
               run: |
                 uv venv .venv
+                echo "source .venv/bin/activate" >> $GITHUB_ENV
                 source .venv/bin/activate
                 uv pip install marimo matplotlib polars
 
             - name: 📄 Export notebook
               run: |
-                  marimo export html-wasm read_mentions.py -o ./_site --mode run
+                source .venv/bin/activate
+                which marimo  # Debugging step to check if marimo is installed
+                marimo export html-wasm read_mentions.py -o ./_site --mode run
 
             - name: 📦 Upload Pages Artifact
               uses: actions/upload-pages-artifact@v3
