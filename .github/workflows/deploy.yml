@@ -13,9 +13,11 @@ jobs:
               with:
                 python-version: 3.12
 
-            - name: 📦 Install dependencies
+            - name: 📦 Create Virtual Environment and Install Dependencies
               run: |
                 uv venv .venv
+                .venv/bin/python -m ensurepip --upgrade  # Ensure pip is installed
+                .venv/bin/python -m pip install --upgrade pip  # Upgrade pip
                 .venv/bin/python -m pip install marimo matplotlib polars
 
             - name: 📄 Export notebook
