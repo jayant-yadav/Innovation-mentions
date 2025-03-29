@@ -1,9 +1,8 @@
+on: push
 jobs:
     build:
         runs-on: ubuntu-latest
-
         steps:
-            # ... checkout and install dependencies
             - uses: actions/checkout@v4
 
             - name: 🚀 Install uv
@@ -14,14 +13,16 @@ jobs:
               with:
                 python-version: 3.12
 
-            - name: 📦 Install dependencies
+            - name: 📦 Create Virtual Environment and Install Dependencies
               run: |
-                uv pip install marimo
-                uv pip install matplotlib
+                uv venv .venv
+                .venv/bin/python -m ensurepip --upgrade  # Ensure pip is installed
+                .venv/bin/python -m pip install --upgrade pip  # Upgrade pip
+                .venv/bin/python -m pip install marimo matplotlib polars
 
             - name: 📄 Export notebook
               run: |
-                  marimo export html-wasm read_mentions.py -o ./_site --mode run
+                .venv/bin/marimo export html-wasm read_mentions.py -o ./_site --mode run
 
             - name: 📦 Upload Pages Artifact
               uses: actions/upload-pages-artifact@v3
