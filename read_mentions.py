@@ -12,7 +12,7 @@ def _():
 
 @app.cell
 def _(mo):
-    mention = mo.ui.text(value="innovation|Innovation", placeholder="innovation|Innovation")
+    mention = mo.ui.text(value="innovation|Innovation|innovations|ابتكار|innovación", placeholder="innovation|Innovation|innovaitons|ابتكار|innovación")
     mo.md(
       f"""
       Enter words sepearted by | 
@@ -41,16 +41,21 @@ def _(mention, mo):
         year = csv_file.name.split()[-1].split(".")[0]
         # Add the year as a new column
         df = df.with_columns(pl.lit(year).alias("Year"))
-        # Filter the dataframe
-        filtered_df = df.filter(df["NarrativeText"].str.contains(mention.value)) #TODO: dont filter. Make another bool col
-        # filtered_df = df.group_by("BUSINESS_AREA_NAME").agg(pl.col("NarrativeText").str.count_matches(mention.value).sum())
-        combined_df = pl.concat([combined_df, filtered_df])
-        print(filtered_df)
-        dataframes[csv_file.name] = filtered_df
+    
+        df = df.with_columns((pl.col("NarrativeText").str.contains(mention.value)).alias("mention_found")) 
+        df = df.with_columns((pl.col("NarrativeText").str.count_matches(mention.value)).alias("doc_count"))
+        df = df.drop_nulls()
+        df = df.group_by("BUSINESS_AREA_NAME","REGION_NAME","Year").agg(
+            pl.col("mention_found").any(),pl.col("doc_count").sum())
+        combined_df = pl.concat([combined_df, df])
+        dataframes[csv_file.name] = df
 
-    combined_df = combined_df.rename({ "REGION_NAME": "Region"
-        ,"BUSINESS_AREA_NAME": "country"})
-    combined_df = combined_df.drop("NarrativeTitle","NarrativeText")
+    combined_df = combined_df.rename({ "REGION_NAME": "Region","BUSINESS_AREA_NAME": "country"})
+    combined_df = combined_df.with_columns(pl.col("doc_count").cast(pl.Int8))
+    combined_df = combined_df.with_columns(pl.col("mention_found").cast(pl.Int8))
+
+    print(combined_df.head())
+
 
     # CSV download using pandas
     csv_download = mo.download(
@@ -67,7 +72,6 @@ def _(mention, mo):
         csv_file,
         dataframes,
         df,
-        filtered_df,
         path_to_public,
         pl,
         year,
@@ -75,7 +79,7 @@ def _(mention, mo):
 
 
 @app.cell
-def _(dataframes, mention, mo):
+def _(dataframes, mo, pl):
     import matplotlib.pyplot as plt
 
     df_plots = []
@@ -83,8 +87,8 @@ def _(dataframes, mention, mo):
     country_counts_n_count = {} # count mentions n times per country
     for file_name, df_ in dataframes.items():
         if "BUSINESS_AREA_NAME" in df_.columns:
-            country_counts_distinct_count[file_name] = df_["BUSINESS_AREA_NAME"].n_unique()
-            country_counts_n_count[file_name] = df_["NarrativeText"].str.count_matches(mention.value).sum()
+            country_counts_distinct_count[file_name] = len(df_.filter(pl.col("mention_found")==True))
+            country_counts_n_count[file_name] = df_["doc_count"].sum()
 
     df_plots = [country_counts_distinct_count, country_counts_n_count]
 
