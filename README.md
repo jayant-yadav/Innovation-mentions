@@ -1,4 +1,3 @@
-# Innovation-mentions
 # UNICEF Innovation Mentions
 
 This application processes UNICEF public End Year Summary Narratives (EYSN) and analyzes mentions of Innovation throughout the corpus.
