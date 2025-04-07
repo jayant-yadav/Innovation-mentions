@@ -24,31 +24,88 @@ def _(mo):
 
 
 @app.cell
-def _(mention, mo):
+def _(mo):
+    import urllib.request
+    import json
+    import os
+    def is_wasm():
+        import sys
+
+        return "pyodide" in sys.modules
+
+    base_path = mo.notebook_location() / "public"
+
+    # Get the base path to the public directory
+    if is_wasm():
+        # In WASM, we need to use HTTP requests to list files
+        try:
+            # Construct the URL to the directory
+            base_url = str(base_path)
+
+            # For demonstration purposes, we'll print the base URL
+            print(f"Looking for files at: {base_url}")
+
+            listing_path = str(base_path / "listing.json")
+            with urllib.request.urlopen(listing_path) as response:
+                files = json.loads(response.read())
+            print(files)
+        except Exception as e:
+            print(f"Error listing files in WASM: {e}")
+            files = []
+        except Exception as e:
+            print(f"Error listing files in WASM: {e}")
+            files = []
+
+    else:
+        # When running locally, we can use os.listdir
+        try:
+            files = os.listdir(str(base_path))
+            # listing_path = str(base_path / "listing.json")
+            # files = json.loads(listing_path)
+            print(files)
+        except FileNotFoundError:
+            print(f"Directory not found: {base_path}")
+            files = []
+    return (
+        base_path,
+        base_url,
+        files,
+        is_wasm,
+        json,
+        listing_path,
+        os,
+        response,
+        urllib,
+    )
+
+
+@app.cell
+def _(base_path, files, mention, mo):
     import polars as pl
     from pathlib import Path
-    path_to_public = mo.notebook_location() / "public"
-
-    print(path_to_public)
 
     dataframes = {}
-    path_to_public = Path(path_to_public)
+
     combined_df = pl.DataFrame()
-    for csv_file in path_to_public.iterdir():
+
+    for csv_file in files:
         print(csv_file)
-        df = pl.read_csv(str(csv_file))
+        if csv_file.endswith('.csv'):
+            file_path = base_path / csv_file
+        else: continue
+        df = pl.read_csv(str(file_path))
         # Extract the year from the file name
-        year = csv_file.name.split()[-1].split(".")[0]
+        year = csv_file.split()[-1].split(".")[0]
         # Add the year as a new column
         df = df.with_columns(pl.lit(year).alias("Year"))
-    
+
         df = df.with_columns((pl.col("NarrativeText").str.contains(mention.value)).alias("mention_found")) 
         df = df.with_columns((pl.col("NarrativeText").str.count_matches(mention.value)).alias("doc_count"))
         df = df.drop_nulls()
         df = df.group_by("BUSINESS_AREA_NAME","REGION_NAME","Year").agg(
             pl.col("mention_found").any(),pl.col("doc_count").sum())
         combined_df = pl.concat([combined_df, df])
-        dataframes[csv_file.name] = df
+        dataframes[csv_file] = df
 
     combined_df = combined_df.rename({ "REGION_NAME": "Region","BUSINESS_AREA_NAME": "country"})
     combined_df = combined_df.with_columns(pl.col("doc_count").cast(pl.Int8))
@@ -72,7 +129,7 @@ def _(mention, mo):
         csv_file,
         dataframes,
         df,
-        path_to_public,
+        file_path,
         pl,
         year,
     )
@@ -100,7 +157,7 @@ def _(dataframes, mo, pl):
     ylabels = ['Distinct Count of Countries with mentions', 'Count of mentions']
     titles = ['Distinct Count of Countries with mentions per EYSN File', 'Count of mentions per EYSN File']
     for df_plot, ylabel, title in zip(df_plots, ylabels, titles):
-    
+
         plt.figure(figsize=(10, 6))
         bars = plt.bar(df_plot.keys(), df_plot.values(), color='skyblue')
         plt.xlabel('CSV Files')
@@ -108,7 +165,7 @@ def _(dataframes, mo, pl):
         plt.title(title)
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-    
+
         # Adding labels on top of bars
         for bar in bars:
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), str(bar.get_height()), 
@@ -120,7 +177,6 @@ def _(dataframes, mo, pl):
             {mo.as_html(axis)}
             """
         ))
-        
     return (
         axis,
         bar,
