@@ -89,25 +89,28 @@ def _(base_path, files, mention, mo):
     combined_df = pl.DataFrame()
 
     for csv_file in files:
-        print(csv_file)
         if csv_file.endswith('.csv'):
             file_path = base_path / csv_file
         else: continue
         df = pl.read_csv(str(file_path))
+        df = df.filter(pl.col("REGION_NAME")!="HQ")
+        df= df.with_columns(pl.col("BUSINESS_AREA_NAME").str.replace("Palestine, State of","Palestine"))
         # Extract the year from the file name
         year = csv_file.split()[-1].split(".")[0]
-        # Add the year as a new column
         df = df.with_columns(pl.lit(year).alias("Year"))
-
+        df = df.with_columns(pl.col("BUSINESS_AREA_NAME").str.split_exact(",", 1)
+        .struct.rename_fields(["first_part", "second_part"]).alias("fields")).unnest("fields")
+    
         df = df.with_columns((pl.col("NarrativeText").str.contains(mention.value)).alias("mention_found")) 
         df = df.with_columns((pl.col("NarrativeText").str.count_matches(mention.value)).alias("doc_count"))
         df = df.drop_nulls()
+        print(df.head(10))
         df = df.group_by("BUSINESS_AREA_NAME","REGION_NAME","Year").agg(
             pl.col("mention_found").any(),pl.col("doc_count").sum())
         combined_df = pl.concat([combined_df, df])
         dataframes[csv_file] = df
 
-    combined_df = combined_df.rename({ "REGION_NAME": "Region","BUSINESS_AREA_NAME": "country"})
+    combined_df = combined_df.rename({ "REGION_NAME": "Region","BUSINESS_AREA_NAME": "Country"})
     combined_df = combined_df.with_columns(pl.col("doc_count").cast(pl.Int8))
     combined_df = combined_df.with_columns(pl.col("mention_found").cast(pl.Int8))
 
