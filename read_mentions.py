@@ -88,29 +88,42 @@ def _(base_path, files, mention, mo):
 
     combined_df = pl.DataFrame()
 
+    def country_correction(country):
+        # "WCARO, Senegal" becomes " Senegal,WACRO"
+        return ",".join(country.split(",")[::-1])
+
+
     for csv_file in files:
         if csv_file.endswith('.csv'):
             file_path = base_path / csv_file
         else: continue
         df = pl.read_csv(str(file_path))
         df = df.filter(pl.col("REGION_NAME")!="HQ")
-        df= df.with_columns(pl.col("BUSINESS_AREA_NAME").str.replace("Palestine, State of","Palestine"))
         # Extract the year from the file name
         year = csv_file.split()[-1].split(".")[0]
         df = df.with_columns(pl.lit(year).alias("Year"))
+        df= df.with_columns(pl.col("BUSINESS_AREA_NAME").str.replace("Palestine, State of","Palestine"))
+        df= df.with_columns(pl.col("BUSINESS_AREA_NAME").map_elements(country_correction, return_dtype=pl.String))
         df = df.with_columns(pl.col("BUSINESS_AREA_NAME").str.split_exact(",", 1)
         .struct.rename_fields(["first_part", "second_part"]).alias("fields")).unnest("fields")
-    
+        df = df.with_columns(pl.col("first_part").str.strip_chars())
+
+        df = df.with_columns(pl.col("second_part").str.replace_all(".*","RO"))
+        df = df.with_columns(pl.col("second_part").fill_null("CO"))
+
         df = df.with_columns((pl.col("NarrativeText").str.contains(mention.value)).alias("mention_found")) 
         df = df.with_columns((pl.col("NarrativeText").str.count_matches(mention.value)).alias("doc_count"))
-        df = df.drop_nulls()
         print(df.head(10))
-        df = df.group_by("BUSINESS_AREA_NAME","REGION_NAME","Year").agg(
+        # print(df.filter(pl.col("BUSINESS_AREA_NAME") == "Nepal").head(10))
+        df = df.drop("BUSINESS_AREA_NAME")
+        df = df.drop_nulls()
+        df = df.rename({ "REGION_NAME": "Region","first_part": "Country", "second_part": "Office"})
+        df = df.group_by("Country","Region","Office","Year").agg(
             pl.col("mention_found").any(),pl.col("doc_count").sum())
         combined_df = pl.concat([combined_df, df])
         dataframes[csv_file] = df
 
-    combined_df = combined_df.rename({ "REGION_NAME": "Region","BUSINESS_AREA_NAME": "Country"})
+    # combined_df = combined_df.rename({ "REGION_NAME": "Region","first_part": "Country", "second_part": "Office"})
     combined_df = combined_df.with_columns(pl.col("doc_count").cast(pl.Int8))
     combined_df = combined_df.with_columns(pl.col("mention_found").cast(pl.Int8))
 
@@ -128,6 +141,7 @@ def _(base_path, files, mention, mo):
     return (
         Path,
         combined_df,
+        country_correction,
         csv_download,
         csv_file,
         dataframes,
@@ -146,8 +160,8 @@ def _(dataframes, mo, pl):
     country_counts_distinct_count = {} # count mentions once per country 
     country_counts_n_count = {} # count mentions n times per country
     for file_name, df_ in dataframes.items():
-        if "BUSINESS_AREA_NAME" in df_.columns:
-            country_counts_distinct_count[file_name] = len(df_.filter(pl.col("mention_found")==True))
+        if "Country" in df_.columns:
+            country_counts_distinct_count[file_name] = len(df_.filter(pl.col("mention_found")==True)) #BUG: distinct count on Country+Office
             country_counts_n_count[file_name] = df_["doc_count"].sum()
 
     df_plots = [country_counts_distinct_count, country_counts_n_count]
@@ -156,7 +170,7 @@ def _(dataframes, mo, pl):
     print(country_counts_n_count)
 
     # Plotting the bar graph
-
+    mo.output.append(mo.md(f"Plots with combined RO and CO statistics:"))
     ylabels = ['Distinct Count of Countries with mentions', 'Count of mentions']
     titles = ['Distinct Count of Countries with mentions per EYSN File', 'Count of mentions per EYSN File']
     for df_plot, ylabel, title in zip(df_plots, ylabels, titles):
