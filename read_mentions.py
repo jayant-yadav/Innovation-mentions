@@ -99,6 +99,7 @@ def _(base_path, files, mention, mo):
         else: continue
         df = pl.read_csv(str(file_path))
         df = df.filter(pl.col("REGION_NAME")!="HQ")
+        df = df.rename({"Indicator_Status3": "NarrativeText"}, strict=False)
         # Extract the year from the file name
         year = csv_file.split()[-1].split(".")[0]
         df = df.with_columns(pl.lit(year).alias("Year"))
