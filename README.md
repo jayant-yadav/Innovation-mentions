@@ -10,6 +10,9 @@ This application processes UNICEF public End Year Summary Narratives (EYSN) and 
 2. Rename the downloaded file with year appended in its name. "RAM3 End-Year Summary Narrative Analysis.csv" -> "RAM3 End-Year Summary Narrative Analysis 2024.csv".
 3. Upload the file to the `public` folder.
 4. Update the `listing.json` file by adding the name of the uploaded file. Make sure that it is a valid json format.
+5. Visit https://jayant-yadav.github.io/Innovation-mentions/
+6. Download the processed file by clicking "Download CSV" button.
+7. Rename the file to "innovation_mentions.xlsx" and upload it to [COAR analysis folder](https://unicef.sharepoint.com/teams/OOI-A2S/DocumentLibrary1/Forms/AllItems.aspx?id=%2Fteams%2FOOI%2DA2S%2FDocumentLibrary1%2F8%2E%20Evidence%2FOOI%20level%2FCOAR%20analysis&viewid=30cf7b5a%2D275a%2D47e4%2Daaf9%2Dc38cf1fe9fe6).
 
 ## Searching with Keywords
 To search using multiple keywords, use the `|` symbol to separate them.
